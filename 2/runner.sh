@@ -1,0 +1,2 @@
+./helloworld
+echo Exit code: $?
