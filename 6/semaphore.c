@@ -17,16 +17,23 @@ void sem(int semId, int n, int d)
     semop(semId, &op, 1);
 }
 
-void unlockSem(int semId, int n)
+void unlockSem(int semId, int checkMemId, int n)
 {
+    int *check = (int *)shmat(checkMemId, 0, 0);
     sem(semId, n, 1);
-}
-void lockSem(int semId, int n)
-{
-    sem(semId, n, -1);
+    check[n] = 0;
 }
 
-void sort(int semId, int memId, const size_t n)
+int lockSem(int semId, int checkMemId, int n)
+{
+    int *check = (int *)shmat(checkMemId, 0, 0);
+    int isBusy = check[n];
+    sem(semId, n, -1);
+    check[n] = 1;
+    return isBusy;
+}
+
+void sort(int semId, int memId, int checkMemId, const size_t n)
 {
     int *nums = (int *)shmat(memId, 0, 0);
 
@@ -35,24 +42,24 @@ void sort(int semId, int memId, const size_t n)
         int minInd = i;
         for (int j = i + 1; j < n; j++)
         {
-            lockSem(semId, i);
-            lockSem(semId, j);
+            lockSem(semId, checkMemId, i);
+            lockSem(semId, checkMemId, j);
             if (nums[j] < nums[minInd])
             {
                 minInd = j;
             }
-            unlockSem(semId, i);
-            unlockSem(semId, j);
+            unlockSem(semId, checkMemId, i);
+            unlockSem(semId, checkMemId, j);
         }
         if (i != minInd)
         {
-            lockSem(semId, i);
-            lockSem(semId, minInd);
+            lockSem(semId, checkMemId, i);
+            lockSem(semId, checkMemId, minInd);
             int t = nums[i];
             nums[i] = nums[minInd];
             nums[minInd] = t;
-            unlockSem(semId, i);
-            unlockSem(semId, minInd);
+            unlockSem(semId, checkMemId, i);
+            unlockSem(semId, checkMemId, minInd);
         }
     }
 }
@@ -82,6 +89,7 @@ int main(int argc, char *argv[])
     const int max = atoi(argv[3]);
 
     int memId = shmget(IPC_PRIVATE, sizeof(int) * N, 0600 | IPC_CREAT | IPC_EXCL);
+    int checkMemId = shmget(IPC_PRIVATE, sizeof(int) * N, 0600 | IPC_CREAT | IPC_EXCL);
     int semId = semget(IPC_PRIVATE, N, 0600 | IPC_CREAT);
 
     int *numbers = (int *)shmat(memId, 0, 0);
@@ -90,13 +98,13 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < N; i++)
     {
-        unlockSem(semId, i);
+        unlockSem(semId, checkMemId, i);
     }
 
     int childId = fork();
     if (childId == 0)
     {
-        sort(semId, memId, N);
+        sort(semId, memId, checkMemId, N);
     }
     else
     {
@@ -107,19 +115,17 @@ int main(int argc, char *argv[])
             printf("%d: ", i);
             for (int j = 0; j < N; j++)
             {
-                time_t before = time(0);
-                lockSem(semId, j);
-                if (before == time(0))
-                {
-                    printf("%d ", numbers[j]);
-                }
-                else
+                if (lockSem(semId, checkMemId, j))
                 {
                     printf("[%d] ", numbers[j]);
                 }
+                else
+                {
+                    printf("%d ", numbers[j]);
+                }
 
                 fflush(stdout);
-                unlockSem(semId, j);
+                unlockSem(semId, checkMemId, j);
             }
             printf("\r\n");
             status = waitpid(childId, NULL, WNOHANG);
