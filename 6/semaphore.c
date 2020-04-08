@@ -136,6 +136,7 @@ int main(int argc, char *argv[])
         print_nums(numbers, N);
 
         shmctl(memId, 0, IPC_RMID);
+        shmctl(checkMemId, 0, IPC_RMID);
         semctl(semId, 0, IPC_RMID);
     }
 }
