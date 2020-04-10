@@ -1,0 +1,3 @@
+mmap()  creates  a  new mapping in the virtual address space of the calling process.  The starting address for
+the new mapping is specified in addr.  The length argument specifies the length of the mapping (which must  be
+greater than 0).

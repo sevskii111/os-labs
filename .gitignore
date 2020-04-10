@@ -5,3 +5,4 @@
 .DS_Store
 ~*
 .vscode
+test_output_file.dat
