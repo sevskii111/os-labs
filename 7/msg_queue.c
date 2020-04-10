@@ -52,14 +52,14 @@ void *mainTask(void *thread_args)
 
   msgrcv(msgId2, &recive, sizeof(recive), 0, 0);
   int p_count = recive.msg[0];
-  printf("Pemutations:\n");
+  printf("Permutations:\n");
   for (int i = 0; i < p_count; i++)
   {
     msgrcv(msgId2, &recive, sizeof(recive), 0, 0);
     print_nums(recive.msg, 4);
   }
 
-  printf("Pemutations count:%d\n", p_count);
+  printf("Permutations count:%d\n", p_count);
 
   msgctl(msgId1, IPC_RMID, NULL);
   msgctl(msgId2, IPC_RMID, NULL);
