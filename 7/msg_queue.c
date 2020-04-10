@@ -33,7 +33,6 @@ void *mainTask(void *thread_args)
   size_t msgId = args->msgId;
   struct my_msg send;
   struct my_msg recive;
-  send.mtype = 1;
 
   char nums[4];
   srand((unsigned)(time(0)));
@@ -46,6 +45,7 @@ void *mainTask(void *thread_args)
   {
     send.msg[i] = nums[i];
   }
+  send.mtype = 1;
   msgsnd(msgId, &send, sizeof(send), 0);
 
   msgrcv(msgId, &recive, sizeof(recive), 2, 0);
@@ -70,7 +70,6 @@ void *childTask(void *thread_args)
   size_t msgId = args->msgId;
   struct my_msg send;
   struct my_msg recive;
-  send.mtype = 2;
 
   msgrcv(msgId, &recive, sizeof(recive), 1, 0);
 
@@ -110,11 +109,12 @@ void *childTask(void *thread_args)
     }
   }
   send.msg[0] = p_count;
+  send.mtype = 2;
   msgsnd(msgId, &send, sizeof(send), 0);
   for (int i = 0; i < p_count; i++)
   {
     memcpy(send.msg, p[i], 4);
-
+    send.mtype = 2;
     msgsnd(msgId, &send, sizeof(send), 0);
   }
 
@@ -123,11 +123,10 @@ void *childTask(void *thread_args)
 
 int main()
 {
-  int msgId1 = msgget(IPC_PRIVATE, 0600 | IPC_CREAT);
-  int msgId2 = msgget(IPC_PRIVATE, 0600 | IPC_CREAT);
+  int msgId = msgget(IPC_PRIVATE, 0600 | IPC_CREAT);
 
   struct thread_args *args;
-  args->msgId = msgId1;
+  args->msgId = msgId;
 
   pthread_t mainThread, childThread;
 
