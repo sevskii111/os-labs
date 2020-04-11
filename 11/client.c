@@ -10,6 +10,12 @@
 #include <stdlib.h>
 #include <time.h>
 
+#ifdef __linux__
+#define UDP_BUFFER_LEN 65507
+#elif __APPLE__
+#define UDP_BUFFER_LEN 9216
+#endif
+
 void fill_random_nums(int *nums, int n, int min, int max)
 {
   srand((unsigned)(time(0)));
@@ -35,9 +41,9 @@ long timedifference(struct timeval t0, struct timeval t1)
 
 int main(int argc, char *argv[])
 {
-  size_t max_n = 65507 / sizeof(int);
+  size_t max_n = UDP_BUFFER_LEN / sizeof(int);
   int n = 0, min, max;
-  while (n <= 0 || max_n > 1000000)
+  while (n <= 0 || n > max_n)
   {
     printf("Enter array length(<=%ld): ", max_n);
     scanf("%d", &n);
@@ -67,6 +73,7 @@ int main(int argc, char *argv[])
   inet_aton(argv[1], &servaddr.sin_addr);
   fill_random_nums((int *)sendline, n, min, max);
   print_nums((int *)sendline, n);
+
   struct timeval start, end;
   int s = sendto(sockfd, sendline, sizeof(sendline), 0, (struct sockaddr *)&servaddr, sizeof(servaddr));
   gettimeofday(&start, 0);
