@@ -15,7 +15,7 @@ struct thread_args
 struct my_msg
 {
   long mtype;
-  char msg[4];
+  char mtext[4];
 };
 
 void print_nums(char *nums, int c)
@@ -43,18 +43,18 @@ void *mainTask(void *thread_args)
   print_nums(nums, 4);
   for (int i = 0; i < 4; i++)
   {
-    send.msg[i] = nums[i];
+    send.mtext[i] = nums[i];
   }
   send.mtype = 1;
   msgsnd(msgId, &send, sizeof(send), 0);
 
   msgrcv(msgId, &recive, sizeof(recive), 2, 0);
-  int p_count = recive.msg[0];
+  int p_count = recive.mtext[0];
   printf("Permutations:\n");
   for (int i = 0; i < p_count; i++)
   {
     msgrcv(msgId, &recive, sizeof(recive), 2, 0);
-    print_nums(recive.msg, 4);
+    print_nums(recive.mtext, 4);
   }
 
   printf("Permutations count:%d\n", p_count);
@@ -87,10 +87,10 @@ void *childTask(void *thread_args)
           continue;
         int l = 6 - i - j - k;
         char curr_p[4];
-        curr_p[0] = recive.msg[i];
-        curr_p[1] = recive.msg[j];
-        curr_p[2] = recive.msg[k];
-        curr_p[3] = recive.msg[l];
+        curr_p[0] = recive.mtext[i];
+        curr_p[1] = recive.mtext[j];
+        curr_p[2] = recive.mtext[k];
+        curr_p[3] = recive.mtext[l];
         char unique = 1;
         for (int m = 0; m < p_count; m++)
         {
@@ -108,12 +108,12 @@ void *childTask(void *thread_args)
       }
     }
   }
-  send.msg[0] = p_count;
+  send.mtext[0] = p_count;
   send.mtype = 2;
   msgsnd(msgId, &send, sizeof(send), 0);
   for (int i = 0; i < p_count; i++)
   {
-    memcpy(send.msg, p[i], 4);
+    memcpy(send.mtext, p[i], 4);
     send.mtype = 2;
     msgsnd(msgId, &send, sizeof(send), 0);
   }
