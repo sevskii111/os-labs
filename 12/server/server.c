@@ -64,15 +64,14 @@ int main(int argc, char *argv[])
       {
         char filename[MAX_FILENAME_SIZE];
         int n = read(newsockfd, filename, MAX_FILENAME_SIZE);
-        if (n == 0){
+        if (n == 0)
+        {
           close(newsockfd);
           exit(0);
         }
-        printf("%s\n", filename);
         FILE *fin = fopen(filename, "r");
         if (fin == NULL)
         {
-          printf("Not found\n");
           long statusmsg = -1;
           write(newsockfd, &statusmsg, sizeof(statusmsg));
         }
@@ -96,7 +95,7 @@ int main(int argc, char *argv[])
     while (1)
     {
       scanf("%s", command);
-      
+
       if (strcmp(command, "exit") == 0)
       {
         exit(0);
